@@ -1,0 +1,1 @@
+# blazor-Inventory_manager_for_store
