@@ -1,0 +1,191 @@
+﻿@page "/categories"
+@rendermode InteractiveAuto
+
+<h1>Manage Categories</h1>
+
+<div>
+    <input @bind="novaCategoria" placeholder="Enter category name" />
+    <button class="btn btn-primary" @onclick="AdicionarCategoria">Add Category</button>
+</div>
+
+@if (categorias.Count == 0)
+{
+    <p>No categories available.</p>
+}
+else
+{
+    <ul>
+        @foreach (var categoria in categorias.Keys)
+        {
+            <li>
+                @categoria
+                <button class="btn btn-secondary btn-sm" @onclick="() => EditarCategoria(categoria)">Edit</button>
+                <button class="btn btn-danger btn-sm" @onclick="() => RemoverCategoria(categoria)">Delete</button>
+
+                <!-- Mostrar produtos desta categoria -->
+                <ul>
+                    @foreach (var produto in categorias[categoria])
+                    {
+                        <li>
+                            @produto
+                            <button class="btn btn-secondary btn-sm" @onclick="() => EditarProduto(categoria, produto)">Edit</button>
+                            <button class="btn btn-danger btn-sm" @onclick="() => RemoverProduto(categoria, produto)">Delete</button>
+                        </li>
+                    }
+                    <li>
+                        <input @bind="novoProduto" placeholder="Add new product" />
+                        <button class="btn btn-primary btn-sm" @onclick="() => AdicionarProduto(categoria)">Add Product</button>
+                    </li>
+                </ul>
+            </li>
+        }
+    </ul>
+}
+
+<!-- Edit Category Modal -->
+@if (isEditingCategory)
+{
+    <div class="modal" style="display:block;">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit Category</h5>
+                    <button type="button" class="btn-close" @onclick="FecharModal"></button>
+                </div>
+                <div class="modal-body">
+                    <input @bind="categoriaEditada" placeholder="Enter new category name" />
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-primary" @onclick="SalvarCategoriaEditada">Save</button>
+                    <button class="btn btn-secondary" @onclick="FecharModal">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Edit Product Modal -->
+@if (isEditingProduct)
+{
+    <div class="modal" style="display:block;">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit Product</h5>
+                    <button type="button" class="btn-close" @onclick="FecharModal"></button>
+                </div>
+                <div class="modal-body">
+                    <input @bind="produtoEditado" placeholder="Enter new product name" />
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-primary" @onclick="SalvarProdutoEditado">Save</button>
+                    <button class="btn btn-secondary" @onclick="FecharModal">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private Dictionary<string, List<string>> categorias = new Dictionary<string, List<string>>();
+    private string novaCategoria = string.Empty;
+    private string novoProduto = string.Empty;
+    private string categoriaEditada = string.Empty;
+    private string produtoEditado = string.Empty;
+    private string categoriaAtual;
+    private string produtoAtual;
+    private bool isEditingCategory = false;
+    private bool isEditingProduct = false;
+
+    protected override void OnInitialized()
+    {
+        CarregarCategorias();
+    }
+
+    private void CarregarCategorias()
+    {
+        // Carrega algumas categorias de exemplo para testar
+        categorias["Roupas"] = new List<string> { "Camiseta", "Calça", "Jaqueta" };
+        categorias["Eletrônicos"] = new List<string> { "Celular", "Notebook", "Tablet" };
+    }
+
+    private void AdicionarCategoria()
+    {
+        if (!string.IsNullOrWhiteSpace(novaCategoria) && !categorias.ContainsKey(novaCategoria))
+        {
+            categorias[novaCategoria] = new List<string>();
+            novaCategoria = string.Empty;
+        }
+    }
+
+    private void RemoverCategoria(string categoria)
+    {
+        if (categorias.ContainsKey(categoria))
+        {
+            categorias.Remove(categoria);
+        }
+    }
+
+    private void EditarCategoria(string categoria)
+    {
+        categoriaAtual = categoria;
+        categoriaEditada = categoria;
+        isEditingCategory = true;
+    }
+
+    private void SalvarCategoriaEditada()
+    {
+        if (!string.IsNullOrWhiteSpace(categoriaEditada) && categoriaAtual != categoriaEditada)
+        {
+            var produtos = categorias[categoriaAtual];
+            categorias.Remove(categoriaAtual);
+            categorias[categoriaEditada] = produtos;
+        }
+        isEditingCategory = false;
+    }
+
+    private void AdicionarProduto(string categoria)
+    {
+        if (!string.IsNullOrWhiteSpace(novoProduto) && categorias.ContainsKey(categoria))
+        {
+            categorias[categoria].Add(novoProduto);
+            novoProduto = string.Empty;
+        }
+    }
+
+    private void RemoverProduto(string categoria, string produto)
+    {
+        if (categorias.ContainsKey(categoria) && categorias[categoria].Contains(produto))
+        {
+            categorias[categoria].Remove(produto);
+        }
+    }
+
+    private void EditarProduto(string categoria, string produto)
+    {
+        categoriaAtual = categoria;
+        produtoAtual = produto;
+        produtoEditado = produto;
+        isEditingProduct = true;
+    }
+
+    private void SalvarProdutoEditado()
+    {
+        if (!string.IsNullOrWhiteSpace(produtoEditado) && produtoAtual != produtoEditado)
+        {
+            var produtos = categorias[categoriaAtual];
+            var index = produtos.IndexOf(produtoAtual);
+            if (index >= 0)
+            {
+                produtos[index] = produtoEditado;
+            }
+        }
+        isEditingProduct = false;
+    }
+
+    private void FecharModal()
+    {
+        isEditingCategory = false;
+        isEditingProduct = false;
+    }
+}
